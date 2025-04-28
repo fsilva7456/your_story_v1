@@ -7,7 +7,12 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/onboarding');
+    // Add a small delay to ensure the router is fully initialized
+    const redirectTimer = setTimeout(() => {
+      router.push('/onboarding');
+    }, 100);
+    
+    return () => clearTimeout(redirectTimer);
   }, [router]);
 
   return (
