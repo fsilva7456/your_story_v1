@@ -47,9 +47,12 @@ export default function OnboardingPage() {
 
       const data = await response.json();
       console.log('Generated Story:', data.story);
+      
+      // Save story to localStorage for the story page to access
+      localStorage.setItem('generatedStory', data.story);
 
-      // For now, just alert and move to a "story" page (future)
-      alert('Your story is ready! (Check console log for now)');
+      // For now, just alert and move to a "story" page
+      alert('Your story is ready!');
       router.push('/story');
     } catch (err) {
       console.error(err);
