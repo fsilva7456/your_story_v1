@@ -1,53 +1,46 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-// Add type declaration for our global variable
-declare global {
-  interface Window {
-    tempGeneratedStory: string | null;
-  }
-}
+type Panel = {
+  panelNumber: number;
+  sceneDescription: string;
+  internalMonologue?: string;
+  dialogue?: string;
+  imageIdea?: string;
+};
 
-function StoryContent() {
-  const [story, setStory] = useState<string | null>(null);
-  const searchParams = useSearchParams();
+export default function StoryPage() {
+  const [panels, setPanels] = useState<Panel[]>([]);
 
   useEffect(() => {
-    // First check if we have the story in our global variable
-    if (typeof window !== 'undefined' && window.tempGeneratedStory) {
-      setStory(window.tempGeneratedStory);
-      // Clear the temp storage after using it
-      setTimeout(() => {
-        window.tempGeneratedStory = null;
-      }, 1000);
-      return;
-    }
-    
-    // Next try to get story from URL parameter
-    const urlData = searchParams.get('data');
-    if (urlData) {
-      // Decode the story data from URL
-      try {
-        const decodedStory = decodeURIComponent(urlData);
-        setStory(decodedStory);
-        return;
-      } catch (e) {
-        console.error('Error decoding story from URL:', e);
-      }
-    }
-    
-    // Fallback: try to get story from localStorage
-    if (typeof window !== 'undefined') {
-      const savedStory = localStorage.getItem('generatedStory');
-      if (savedStory) {
-        setStory(savedStory);
-      }
-    }
-  }, [searchParams]);
+    const rawStory = localStorage.getItem('generatedStory');
+    if (!rawStory) return;
 
-  if (!story) {
+    // Parse the Gemini output
+    const parsedPanels: Panel[] = [];
+    const panelSections = rawStory.split(/\*\*Panel \d+\*\*/g).filter(Boolean);
+
+    panelSections.forEach((section, idx) => {
+      // Using lookahead pattern instead of 's' flag to match across multiple lines
+      const sceneMatch = section.match(/\*\*Scene Description:\*\*([\s\S]*?)(?=\*\*|$)/);
+      const monologueMatch = section.match(/\*\*Internal Monologue:\*\*([\s\S]*?)(?=\*\*|$)/);
+      const dialogueMatch = section.match(/\*\*Dialogue:\*\*([\s\S]*?)(?=\*\*|$)/);
+      const imageMatch = section.match(/\*\*Image:\*\*([\s\S]*?)(?=\*\*|$)/);
+
+      parsedPanels.push({
+        panelNumber: idx + 1,
+        sceneDescription: sceneMatch ? sceneMatch[1].trim() : '',
+        internalMonologue: monologueMatch ? monologueMatch[1].trim() : undefined,
+        dialogue: dialogueMatch ? dialogueMatch[1].trim() : undefined,
+        imageIdea: imageMatch ? imageMatch[1].trim() : undefined,
+      });
+    });
+
+    setPanels(parsedPanels);
+  }, []);
+
+  if (panels.length === 0) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p className="text-gray-500 text-lg">No story found. Please complete onboarding first.</p>
@@ -55,28 +48,26 @@ function StoryContent() {
     );
   }
 
-  // Split story by panel sections if needed
-  const panels = story.split(/Panel \d+:/).filter((panel) => panel.trim() !== '');
-
   return (
     <div className="max-w-2xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Your Story</h1>
       <div className="flex flex-col gap-8">
-        {panels.map((panel, index) => (
-          <div key={index} className="border border-gray-300 rounded-lg p-4 shadow-sm">
-            <h2 className="text-lg font-semibold mb-2">Panel {index + 1}</h2>
-            <p className="text-gray-700 whitespace-pre-line">{panel.trim()}</p>
+        {panels.map((panel) => (
+          <div key={panel.panelNumber} className="border border-gray-300 rounded-lg p-4 shadow-sm">
+            <h2 className="text-xl font-semibold mb-2">Panel {panel.panelNumber}</h2>
+            <p className="text-gray-700 mb-2"><strong>Scene:</strong> {panel.sceneDescription}</p>
+            {panel.internalMonologue && (
+              <p className="text-indigo-600 mb-2 italic">"{panel.internalMonologue}"</p>
+            )}
+            {panel.dialogue && (
+              <p className="text-green-700 mb-2">Dialogue: {panel.dialogue}</p>
+            )}
+            {panel.imageIdea && (
+              <p className="text-gray-500 text-sm">[Image Idea: {panel.imageIdea}]</p>
+            )}
           </div>
         ))}
       </div>
     </div>
-  );
-}
-
-export default function StoryPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
-      <StoryContent />
-    </Suspense>
   );
 } 
