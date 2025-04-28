@@ -21,7 +21,7 @@ ${answers.map((answer, idx) => `Q${idx + 1}: ${answer}`).join('\n')}
 `;
 
     // Call Gemini API
-    const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=' + process.env.GEMINI_API_KEY, {
+    const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + process.env.GEMINI_API_KEY, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
