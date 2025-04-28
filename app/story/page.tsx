@@ -3,14 +3,30 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
+// Add type declaration for our global variable
+declare global {
+  interface Window {
+    tempGeneratedStory: string | null;
+  }
+}
+
 function StoryContent() {
   const [story, setStory] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // First try to get story from URL parameter
-    const urlData = searchParams.get('data');
+    // First check if we have the story in our global variable
+    if (typeof window !== 'undefined' && window.tempGeneratedStory) {
+      setStory(window.tempGeneratedStory);
+      // Clear the temp storage after using it
+      setTimeout(() => {
+        window.tempGeneratedStory = null;
+      }, 1000);
+      return;
+    }
     
+    // Next try to get story from URL parameter
+    const urlData = searchParams.get('data');
     if (urlData) {
       // Decode the story data from URL
       try {

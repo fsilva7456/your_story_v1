@@ -3,6 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Add type declaration for our global variable
+declare global {
+  interface Window {
+    tempGeneratedStory: string | null;
+  }
+}
+
 const questions = [
   "What's something on your mind a lot lately?",
   "What's a problem you're trying to solve?",
@@ -29,6 +36,12 @@ const defaultAnswers = [
   "My old college roommate - they've completely transformed their life in a way I never expected.",
   "Living in a coastal town, working remotely, and spending evenings painting or learning to sail.",
 ];
+
+// Create a global variable to temporarily store the generated story
+// This is a workaround for the page transition issue
+if (typeof window !== 'undefined') {
+  window.tempGeneratedStory = window.tempGeneratedStory || null;
+}
 
 export default function OnboardingPage() {
   const [answers, setAnswers] = useState<string[]>(defaultAnswers);
@@ -62,13 +75,18 @@ export default function OnboardingPage() {
       const data = await response.json();
       console.log('Generated Story:', data.story);
       
-      // Save story to localStorage first (as a reliable backup)
+      // Save to localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('generatedStory', data.story);
+        try {
+          localStorage.setItem('generatedStory', data.story);
+          // Also set the global temp variable
+          window.tempGeneratedStory = data.story;
+        } catch (e) {
+          console.error('Error saving to localStorage:', e);
+        }
       }
 
-      // Navigate to story page without query parameter
-      // The story component will read from localStorage
+      // Navigate to story page
       router.push('/story');
     } catch (err) {
       console.error(err);
@@ -101,7 +119,7 @@ export default function OnboardingPage() {
           disabled={isSubmitting}
           className="mt-6 w-full bg-blue-600 text-white font-semibold py-3 rounded-md hover:bg-blue-700 transition"
         >
-          {isSubmitting ? "Submitting..." : "Submit Answers"}
+          {isSubmitting ? "Generating Your Story..." : "Generate Your Story"}
         </button>
       </form>
     </div>
