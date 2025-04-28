@@ -16,8 +16,22 @@ const questions = [
   "Imagine a totally different life—what does it look like?",
 ];
 
+// Default answers to help users get started
+const defaultAnswers = [
+  "I've been thinking a lot about my career direction and what makes me feel fulfilled.",
+  "I'm trying to find a better work-life balance that gives me more time for creative pursuits.",
+  "My family and my personal growth are my biggest priorities right now.",
+  "Whether to take that course I've been looking at for months - it's expensive but could open new doors.",
+  "Landing a project that really excites me or reconnecting with someone important from my past.",
+  "How I managed to teach myself coding despite having no formal background in it.",
+  "That I'm falling behind my peers or missing out on opportunities because I'm playing it too safe.",
+  "Constantly checking my phone first thing in the morning instead of taking time for myself.",
+  "My old college roommate - they've completely transformed their life in a way I never expected.",
+  "Living in a coastal town, working remotely, and spending evenings painting or learning to sail.",
+];
+
 export default function OnboardingPage() {
-  const [answers, setAnswers] = useState<string[]>(Array(questions.length).fill(''));
+  const [answers, setAnswers] = useState<string[]>(defaultAnswers);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -76,6 +90,7 @@ export default function OnboardingPage() {
               rows={3}
               value={answers[index]}
               onChange={(e) => handleChange(index, e.target.value)}
+              placeholder="Share your thoughts here..."
             />
           </div>
         ))}
