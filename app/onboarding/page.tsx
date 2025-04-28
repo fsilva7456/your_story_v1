@@ -48,12 +48,16 @@ export default function OnboardingPage() {
       const data = await response.json();
       console.log('Generated Story:', data.story);
       
-      // Save story to localStorage for the story page to access
-      localStorage.setItem('generatedStory', data.story);
+      // Save story to both localStorage and URL state
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('generatedStory', data.story);
+      }
 
-      // For now, just alert and move to a "story" page
-      alert('Your story is ready!');
-      router.push('/story');
+      // Encode the story for URL transmission
+      const encodedStory = encodeURIComponent(data.story);
+      
+      // Navigate to story page with the story data as a query parameter
+      router.push(`/story?data=${encodedStory}`);
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please try again.');

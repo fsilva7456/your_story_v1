@@ -1,17 +1,35 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export default function StoryPage() {
   const [story, setStory] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    // For now, fetch story from localStorage (later from database)
-    const savedStory = localStorage.getItem('generatedStory');
-    if (savedStory) {
-      setStory(savedStory);
+    // First try to get story from URL parameter
+    const urlData = searchParams.get('data');
+    
+    if (urlData) {
+      // Decode the story data from URL
+      try {
+        const decodedStory = decodeURIComponent(urlData);
+        setStory(decodedStory);
+        return;
+      } catch (e) {
+        console.error('Error decoding story from URL:', e);
+      }
     }
-  }, []);
+    
+    // Fallback: try to get story from localStorage
+    if (typeof window !== 'undefined') {
+      const savedStory = localStorage.getItem('generatedStory');
+      if (savedStory) {
+        setStory(savedStory);
+      }
+    }
+  }, [searchParams]);
 
   if (!story) {
     return (
